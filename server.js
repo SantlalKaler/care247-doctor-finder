@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
@@ -49,34 +51,51 @@ function getDistance(lat1, lon1, lat2, lon2) {
 // API
 app.get("/nearby-doctors", (req, res) => {
   const { lat, lng, radius = 5 } = req.query;
+  try {
+    // validation
+    if (!lat || !lng) {
+      return res.status(400).json({ error: "lat & lng required" });
+    }
 
-  // validation
-  if (!lat || !lng) {
-    return res.status(400).json({ error: "lat & lng required" });
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+    const maxRadius = parseFloat(radius);
+
+    // console.log("Doctors ", doctors);
+
+    const result = doctors
+      .map((doc) => {
+        // console.log("Doctor info ", doc.specialization);
+
+        const distance = getDistance(userLat, userLng, doc.lat, doc.lng);
+        return { ...doc, distance };
+      })
+      .filter((doc) => doc.distance <= maxRadius)
+      .sort((a, b) => a.distance - b.distance);
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to add doctor" });
   }
-
-  const userLat = parseFloat(lat);
-  const userLng = parseFloat(lng);
-  const maxRadius = parseFloat(radius);
-
-  console.log("Doctors ", doctors);
-
-  const result = doctors
-    .map((doc) => {
-      console.log("Doctor info ", doc.specialization);
-
-      const distance = getDistance(userLat, userLng, doc.lat, doc.lng);
-      return { ...doc, distance };
-    })
-    .filter((doc) => doc.distance <= maxRadius)
-    .sort((a, b) => a.distance - b.distance);
-
-  res.json(result);
 });
 
 // =========================
 // Add Doctor
 // =========================
+const credentials = 'credentials.json';
+
+// const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+// credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
+// const auth = new google.auth.GoogleAuth({
+//   credentials,
+//   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+// });
+
+// console.log(
+//   "Google cred direct without jsone - ",
+//   process.env.GOOGLE_CREDENTIALS,
+// );
 
 const auth = new google.auth.GoogleAuth({
   keyFile: "credentials.json",
@@ -91,7 +110,6 @@ const RANGE = "Sheet1"; // sheet name
 app.use(express.json());
 app.post("/add-doctor", async (req, res) => {
   try {
-
     const { name, specialization, contact, lat, lng } = req.body;
 
     // basic validation
@@ -112,7 +130,6 @@ app.post("/add-doctor", async (req, res) => {
         error: "Doctor already registered with this contact",
       });
     }
-
 
     // If not found then add doctor to sheet
     const values = [[name, specialization, contact, lat, lng]];
