@@ -11,21 +11,15 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     role: {
       type: String,
       enum: ["doctor", "patient", "admin"],
       required: true,
     },
-
     phones: [phoneSchema],
-
     emails: [emailSchema],
-
     addresses: [addressModel],
-
     profileImage: String,
-
     isActive: {
       type: Boolean,
       default: true,

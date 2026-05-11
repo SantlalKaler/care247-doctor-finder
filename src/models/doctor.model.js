@@ -12,16 +12,13 @@ const doctorSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
     experienceYears: Number,
-
     consultationModes: [
       {
         type: String,
         enum: ["clinic", "home_visit", "teleconsultation"],
       },
     ],
-
     isAvailable: {
       type: Boolean,
       default: true,

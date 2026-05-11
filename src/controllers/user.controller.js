@@ -398,15 +398,10 @@ export const findNearbyDoctors = async (req, res) => {
             type: "Point",
             coordinates: [longitude, latitude],
           },
-
           distanceField: "distance",
-
           maxDistance: radiusInMeters,
-
           spherical: true,
-
           key: "addresses.location",
-
           query: {
             role: "doctor",
             isActive: true,
@@ -414,17 +409,25 @@ export const findNearbyDoctors = async (req, res) => {
         },
       },
 
+        // doctor profile join
+      {
+        $lookup: {
+          from: "doctors",
+          localField: "_id",
+          foreignField: "userId",
+          as: "doctorProfile",
+        },
+      },
+
       // unwind addresses
       {
         $unwind: "$addresses",
       },
-
       {
         $sort: {
           distance: 1,
         },
       },
-
       {
         $skip: skip,
       },
