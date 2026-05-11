@@ -112,7 +112,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
 // ================================
 // Edit User
 // ================================
@@ -185,7 +184,7 @@ export const updateUser = async (req, res) => {
       },
       {
         new: true,
-      }
+      },
     );
 
     // =========================
@@ -210,7 +209,7 @@ export const updateUser = async (req, res) => {
           },
           {
             new: true,
-          }
+          },
         );
 
         break;
@@ -242,7 +241,6 @@ export const updateUser = async (req, res) => {
     });
   }
 };
-
 
 // ================================
 // Get All User
@@ -331,7 +329,7 @@ export const getUsers = async (req, res) => {
 
       if (user.role === "doctor") {
         roleData = doctors.find(
-          (d) => d.userId.toString() === user._id.toString()
+          (d) => d.userId.toString() === user._id.toString(),
         );
       }
 
@@ -366,8 +364,6 @@ export const getUsers = async (req, res) => {
     });
   }
 };
-
-
 
 // ================================
 // Get Nearby Doctors
@@ -409,7 +405,7 @@ export const findNearbyDoctors = async (req, res) => {
         },
       },
 
-        // doctor profile join
+      // doctor profile join
       {
         $lookup: {
           from: "doctors",
@@ -444,7 +440,7 @@ export const findNearbyDoctors = async (req, res) => {
           phones: 1,
           emails: 1,
           address: "$addresses",
-
+          roleData: "$doctorProfile",
           distanceInKm: {
             $round: [
               {
