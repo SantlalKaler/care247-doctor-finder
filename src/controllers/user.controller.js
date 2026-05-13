@@ -387,21 +387,17 @@ export const findNearbyDoctors = async (req, res) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const doctors = await User.aggregate([
+      // MUST BE FIRST STAGE
       {
         $geoNear: {
           near: {
             type: "Point",
             coordinates: [longitude, latitude],
           },
-
           distanceField: "distance",
-
           maxDistance: radiusInMeters,
-
           spherical: true,
-
           key: "addresses.location",
-
           query: {
             role: "doctor",
             isActive: true,
@@ -409,61 +405,7 @@ export const findNearbyDoctors = async (req, res) => {
         },
       },
 
-      // keep only nearby addresses
-      {
-        $addFields: {
-          addresses: {
-            $filter: {
-              input: "$addresses",
-              as: "address",
-              cond: {
-                $lte: [
-                  {
-                    $sqrt: {
-                      $add: [
-                        {
-                          $pow: [
-                            {
-                              $subtract: [
-                                {
-                                  $arrayElemAt: [
-                                    "$$address.location.coordinates",
-                                    0,
-                                  ],
-                                },
-                                longitude,
-                              ],
-                            },
-                            2,
-                          ],
-                        },
-                        {
-                          $pow: [
-                            {
-                              $subtract: [
-                                {
-                                  $arrayElemAt: [
-                                    "$$address.location.coordinates",
-                                    1,
-                                  ],
-                                },
-                                latitude,
-                              ],
-                            },
-                            2,
-                          ],
-                        },
-                      ],
-                    },
-                  },
-                  1,
-                ],
-              },
-            },
-          },
-        },
-      },
-
+      // doctor profile join
       {
         $lookup: {
           from: "doctors",
@@ -473,19 +415,32 @@ export const findNearbyDoctors = async (req, res) => {
         },
       },
 
+      // unwind addresses
+      {
+        $unwind: "$addresses",
+      },
+      {
+        $sort: {
+          distance: 1,
+        },
+      },
+      {
+        $skip: skip,
+      },
+
+      {
+        $limit: Number(limit),
+      },
+
       {
         $project: {
           name: 1,
           role: 1,
+          specialization: 1,
           phones: 1,
           emails: 1,
-
-          addresses: 1,
-
-          roleData: {
-            $arrayElemAt: ["$doctorProfile", 0],
-          },
-
+          address: "$addresses",
+          roleData: "$doctorProfile",
           distanceInKm: {
             $round: [
               {
@@ -495,20 +450,6 @@ export const findNearbyDoctors = async (req, res) => {
             ],
           },
         },
-      },
-
-      {
-        $sort: {
-          distance: 1,
-        },
-      },
-
-      {
-        $skip: skip,
-      },
-
-      {
-        $limit: Number(limit),
       },
     ]);
 
