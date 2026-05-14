@@ -1,4 +1,5 @@
 import express from "express";
+import {registerLimiter} from "../middleware/rateLimit.js";
 
 import {
   registerUser,
@@ -9,8 +10,8 @@ import {
 
 const router = express.Router();
 
-router.post("/register", registerUser);
-router.put("/:userId", updateUser);
+router.post("/register", registerLimiter, registerUser);
+router.put("/:userId",registerLimiter, updateUser);
 router.get("/", getUsers);
 router.get("/nearby-doctors", findNearbyDoctors);
 

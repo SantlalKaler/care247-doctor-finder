@@ -1,5 +1,8 @@
 import User from "../models/user.model.js";
 import Doctor from "../models/doctor.model.js";
+import { verifyTurnstile } from "../utils/verifyTurnstile.js";
+
+// verify cloud fare
 
 export const registerUser = async (req, res) => {
   try {
@@ -14,7 +17,37 @@ export const registerUser = async (req, res) => {
       specialization,
       experienceYears,
       consultationModes,
+
+      // security
+      captchaToken,
+      website,
     } = req.body;
+
+    // ======================
+    // Human Verification
+    // ======================
+    if (!captchaToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Captcha token missing",
+      });
+    }
+
+    const isHuman = await verifyTurnstile(captchaToken);
+
+    if (!isHuman) {
+      return res.status(400).json({
+        success: false,
+        message: "Captcha verification failed",
+      });
+    }
+
+    if (req.body.website) {
+      return res.status(400).json({
+        success: false,
+        message: "Bot detected",
+      });
+    }
 
     // ======================
     // Validation
@@ -115,7 +148,6 @@ export const registerUser = async (req, res) => {
 // ================================
 // Edit User
 // ================================
-
 export const updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -368,7 +400,6 @@ export const getUsers = async (req, res) => {
 // ================================
 // Get Nearby Doctors
 // ================================
-
 export const findNearbyDoctors = async (req, res) => {
   try {
     const { lat, lng, radius = 10, page = 1, limit = 20 } = req.query;
