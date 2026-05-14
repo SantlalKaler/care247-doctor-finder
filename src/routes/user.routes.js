@@ -10,8 +10,8 @@ import {
 
 const router = express.Router();
 
-router.post("/register", registerLimiter, registerUser);
-router.put("/:userId",registerLimiter, updateUser);
+router.post("/register",registerUser);
+router.put("/:userId", updateUser);
 router.get("/", getUsers);
 router.get("/nearby-doctors", findNearbyDoctors);
 
