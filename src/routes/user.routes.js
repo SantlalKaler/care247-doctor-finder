@@ -5,7 +5,8 @@ import {
   registerUser,
   updateUser,
   getUsers,
-  findNearbyDoctors
+  findNearbyDoctors,
+  bulkDeleteUsers
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -13,6 +14,7 @@ const router = express.Router();
 router.post("/register",registerUser);
 router.put("/:userId", updateUser);
 router.get("/", getUsers);
+router.post("/bulk-delete", bulkDeleteUsers);
 router.get("/nearby-doctors", findNearbyDoctors);
 
 export default router;

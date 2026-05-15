@@ -398,6 +398,37 @@ export const getUsers = async (req, res) => {
 };
 
 // ================================
+// Delete multiple users
+// ================================
+export const bulkDeleteUsers = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Ids are required",
+      });
+    }
+
+    await User.deleteMany({
+      _id: { $in: ids },
+    });
+
+    return res.json({
+      success: true,
+      message: "Users deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete users",
+      error: error.message,
+    });
+  }
+};
+
+// ================================
 // Get Nearby Doctors
 // ================================
 export const findNearbyDoctors = async (req, res) => {
