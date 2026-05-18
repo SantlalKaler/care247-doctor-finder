@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
-import emailSchema from './email.model.js';
-import phoneSchema from './phone.model.js';
-import addressModel from './address.model.js';
+import emailSchema from "./email.model.js";
+import phoneSchema from "./phone.model.js";
+import addressModel from "./address.model.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -19,6 +19,14 @@ const userSchema = new mongoose.Schema(
     phones: [phoneSchema],
     emails: [emailSchema],
     addresses: [addressModel],
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
     profileImage: String,
     isActive: {
       type: Boolean,
@@ -27,7 +35,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 userSchema.index({

@@ -77,10 +77,29 @@ export const registerUser = async (req, res) => {
       "phones.number": primaryPhone,
     });
 
-    if (existingUser) {
+    if (existingUser && !existingUser.isDeleted) {
       return res.status(400).json({
         success: false,
         message: "User already exists",
+      });
+    }
+
+    if (existingUser && existingUser.isDeleted) {
+      existingUser.isDeleted = false;
+      existingUser.isActive = true;
+
+      existingUser.name = name;
+      existingUser.role = role;
+      existingUser.phones = phones;
+      existingUser.emails = emails;
+      existingUser.addresses = addresses;
+
+      await existingUser.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "User restored successfully",
+        data: existingUser,
       });
     }
 
@@ -295,7 +314,9 @@ export const getUsers = async (req, res) => {
     // Filters
     // =========================
 
-    const filters = {};
+    const filters = {
+      isDeleted: { $ne: true },
+    };
 
     if (role) {
       filters.role = role;
@@ -400,7 +421,7 @@ export const getUsers = async (req, res) => {
 // ================================
 // Delete multiple users
 // ================================
-export const bulkDeleteUsers = async (req, res) => {
+export const bulkSoftDeleteUsers = async (req, res) => {
   try {
     const { ids } = req.body;
 
@@ -411,18 +432,27 @@ export const bulkDeleteUsers = async (req, res) => {
       });
     }
 
-    await User.deleteMany({
-      _id: { $in: ids },
-    });
+    const result = await User.updateMany(
+      {
+        _id: { $in: ids },
+      },
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt: new Date(),
+        },
+      },
+    );
 
-    return res.json({
+    return res.status(200).json({
       success: true,
-      message: "Users deleted successfully",
+      message: "Doctors deleted successfully",
+      modifiedCount: result.modifiedCount,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Failed to delete users",
+      message: "Failed to delete doctors",
       error: error.message,
     });
   }
@@ -449,25 +479,29 @@ export const findNearbyDoctors = async (req, res) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const doctors = await User.aggregate([
-      // MUST BE FIRST STAGE
       {
         $geoNear: {
           near: {
             type: "Point",
             coordinates: [longitude, latitude],
           },
+
           distanceField: "distance",
+
           maxDistance: radiusInMeters,
+
           spherical: true,
+
           key: "addresses.location",
+
           query: {
             role: "doctor",
             isActive: true,
+            isDeleted: { $ne: true },
           },
         },
       },
 
-      // doctor profile join
       {
         $lookup: {
           from: "doctors",
@@ -477,15 +511,27 @@ export const findNearbyDoctors = async (req, res) => {
         },
       },
 
-      // unwind addresses
       {
-        $unwind: "$addresses",
+        $unwind: {
+          path: "$doctorProfile",
+          preserveNullAndEmptyArrays: true,
+        },
       },
+
+      {
+        $addFields: {
+          matchedAddress: {
+            $first: "$addresses",
+          },
+        },
+      },
+
       {
         $sort: {
           distance: 1,
         },
       },
+
       {
         $skip: skip,
       },
@@ -498,11 +544,14 @@ export const findNearbyDoctors = async (req, res) => {
         $project: {
           name: 1,
           role: 1,
-          specialization: 1,
+
           phones: 1,
           emails: 1,
-          address: "$addresses",
+
+          address: "$matchedAddress",
+
           roleData: "$doctorProfile",
+
           distanceInKm: {
             $round: [
               {
