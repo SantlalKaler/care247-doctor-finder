@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.post("/register",registerLimiter,registerUser);
 router.put("/:userId",registerLimiter, updateUser);
-router.get("/", registerLimiter, getUsers);
+router.get("/", getUsers);
 router.post("/bulk-delete", bulkSoftDeleteUsers);
 router.get("/nearby-doctors", findNearbyDoctors);
 router.patch("/toggle-user-status", toggleUserStatus);
