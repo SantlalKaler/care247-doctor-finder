@@ -11,10 +11,10 @@ import {
 
 const router = express.Router();
 
-router.post("/register",registerUser);
-router.put("/:userId", updateUser);
-router.get("/", getUsers);
-router.post("/bulk-delete", bulkSoftDeleteUsers);
+router.post("/register",registerLimiter,registerUser);
+router.put("/:userId",registerLimiter, updateUser);
+router.get("/", registerLimiter, getUsers);
+router.post("/bulk-delete",registerLimiter, bulkSoftDeleteUsers);
 router.get("/nearby-doctors", findNearbyDoctors);
 
 export default router;

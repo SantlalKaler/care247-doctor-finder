@@ -26,21 +26,21 @@ export const registerUser = async (req, res) => {
     // ======================
     // Human Verification
     // ======================
-    // if (!captchaToken) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Captcha token missing",
-    //   });
-    // }
+    if (!captchaToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Captcha token missing",
+      });
+    }
 
-    // const isHuman = await verifyTurnstile(captchaToken);
+    const isHuman = await verifyTurnstile(captchaToken);
 
-    // if (!isHuman) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Captcha verification failed",
-    //   });
-    // }
+    if (!isHuman) {
+      return res.status(400).json({
+        success: false,
+        message: "Captcha verification failed",
+      });
+    }
 
     if (req.body.website) {
       return res.status(400).json({
