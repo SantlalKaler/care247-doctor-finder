@@ -6,7 +6,8 @@ import {
   updateUser,
   getUsers,
   findNearbyDoctors,
-  bulkSoftDeleteUsers
+  bulkSoftDeleteUsers,
+  toggleUserStatus
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.put("/:userId",registerLimiter, updateUser);
 router.get("/", registerLimiter, getUsers);
 router.post("/bulk-delete", bulkSoftDeleteUsers);
 router.get("/nearby-doctors", findNearbyDoctors);
+router.patch("/toggle-user-status", toggleUserStatus);
 
 export default router;

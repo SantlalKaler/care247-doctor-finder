@@ -53,10 +53,10 @@ export const registerUser = async (req, res) => {
     // Validation
     // ======================
 
-    if (!name || !role) {
+    if (!name || !role || !specialization || !experienceYears || !addresses) {
       return res.status(400).json({
         success: false,
-        message: "Name and role are required",
+        message: "Fill all required fields.",
       });
     }
 
@@ -289,6 +289,60 @@ export const updateUser = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update user",
+    });
+  }
+};
+
+// ================================
+// Toggle User Active Status
+// ================================
+export const toggleUserStatus = async (req, res) => {
+  try {
+    const userId = req.params.userId || req.body.userId;
+    const { isActive } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User id is required",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user || user.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          isActive:
+            typeof isActive === "boolean" ? isActive : !user.isActive,
+        },
+      },
+      {
+        new: true,
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `User status updated to ${
+        updatedUser.isActive ? "active" : "inactive"
+      }`,
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Toggle user status error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update user status",
     });
   }
 };
@@ -579,3 +633,5 @@ export const findNearbyDoctors = async (req, res) => {
     });
   }
 };
+
+
